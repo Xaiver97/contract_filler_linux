@@ -39,9 +39,28 @@ jobs:
             debian:bullseye bash -c "
               set -e
 
+              echo '>>> 修复 Debian 11 apt 软件源（Bullseye 已 EOL，切到官方永久归档 archive）...'
+              # 背景：官方 debian:bullseye 镜像的 sources 指向 deb.debian.org 的
+              # debian-security，但 bullseye 已 EOL，该源的 pool 内容被逐步清空 → 拉包 404。
+              # deb.debian.org 主源同样处于"半归档"状态（Release 在、二进制在清空）。
+              # 唯一可靠源是 Debian 官方永久归档 archive.debian.org：
+              #   - 已在其中验证 python3.9-venv、libgl1 等均存在
+              #   - security 补丁已并入 bullseye 主源，无需单独的 debian-security 行
+              #     （archive.debian.org/debian-security 下根本没有 bullseye dist）
+              # 用 http + trusted=yes：archive 不支持 https，且镜像 keyring 与其同源可信任。
+              cat > /etc/apt/sources.list << 'SOURCES'
+              deb [trusted=yes] http://archive.debian.org/debian/ bullseye main contrib non-free
+              deb [trusted=yes] http://archive.debian.org/debian/ bullseye-updates main contrib non-free
+              SOURCES
+              # 有些镜像把源写在这两个文件里，一并清掉，避免残留旧 security 条目
+              rm -f /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources 2>/dev/null || true
+              # 清理过期 lists，强制按新源重建
+              rm -rf /var/lib/apt/lists/*
+              # archive 的 Release 日期较旧，跳过"有效期限"检查避免被拦
+              echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid
+              apt-get -o Acquire::Retries=5 update -q
+
               echo '>>> 安装系统依赖...'
-              apt-get update -q
-              # Python3 与虚拟环境
               apt-get install -y python3 python3-pip python3-venv
               # PyQt5 需要的系统级 Qt/X11 运行库（无头容器里也要收集齐）
               apt-get install -y \
