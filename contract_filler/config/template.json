@@ -1,0 +1,298 @@
+{
+  "_readme": "字段坐标配置。reference_size 已设为当前模板的实际尺寸 1920x1332，因此配置里的坐标就是模板上的像素位置，所见即所得。换用其他尺寸的模板时，修改 reference_size 即可，程序会按宽度自动等比缩放全部坐标与字号。初次使用请务必用「工具 → 校准字段坐标」逐项对准。",
+  "template": "assets/template_new.jpg",
+  "reference_size": [
+    1920,
+    1332
+  ],
+  "calibrated": true,
+  "calibrated_at": "2026-09-04 02:08:17",
+  "styles": {
+    "body": {
+      "size": 32,
+      "size_jitter": 3.0,
+      "rot_jitter": 2.0,
+      "pos_jitter": 1.8,
+      "spacing_jitter": 1.4,
+      "char_spacing": 0.02,
+      "digit_spacing": -0.18,
+      "drift_amp": 2.6,
+      "snake_amp": 1.2,
+      "fatigue": 1.8,
+      "tremor": 0.8,
+      "ink_depth": 0.07,
+      "alpha_min": 0.86,
+      "alpha_max": 1.0,
+      "bleed_sigma": 0.5,
+      "bleed_contrast": 1.28,
+      "grain_sigma": 4.0,
+      "fade_strength": 0.985,
+      "region_blur": 0.32,
+      "stroke_supersample": 4,
+      "stroke_dx": 1.1,
+      "stroke_dy": 1.1,
+      "stroke_rot": 1.0,
+      "stroke_growth": 0.09,
+      "stroke_pressure": 0.2,
+      "stroke_dry": 0.12,
+      "chaos": 1.0
+    },
+    "small": {
+      "size": 24,
+      "size_jitter": 2.3,
+      "rot_jitter": 1.8,
+      "pos_jitter": 1.5,
+      "spacing_jitter": 1.1,
+      "char_spacing": 0.02,
+      "digit_spacing": -0.18,
+      "drift_amp": 2.1,
+      "snake_amp": 1.0,
+      "fatigue": 1.4,
+      "tremor": 0.65,
+      "ink_depth": 0.07,
+      "alpha_min": 0.85,
+      "alpha_max": 1.0,
+      "bleed_sigma": 0.45,
+      "bleed_contrast": 1.26,
+      "grain_sigma": 4.0,
+      "fade_strength": 0.985,
+      "region_blur": 0.3,
+      "stroke_supersample": 4,
+      "stroke_dx": 1.0,
+      "stroke_dy": 1.0,
+      "stroke_rot": 0.9,
+      "stroke_growth": 0.08,
+      "stroke_pressure": 0.18,
+      "stroke_dry": 0.1,
+      "chaos": 1.0
+    },
+    "signature": {
+      "size": 44,
+      "size_jitter": 5.0,
+      "rot_jitter": 3.2,
+      "pos_jitter": 2.6,
+      "spacing_jitter": 2.4,
+      "char_spacing": 0.02,
+      "digit_spacing": -0.18,
+      "drift_amp": 3.4,
+      "snake_amp": 1.7,
+      "fatigue": 2.8,
+      "tremor": 1.1,
+      "ink_depth": 0.07,
+      "alpha_min": 0.88,
+      "alpha_max": 1.0,
+      "bleed_sigma": 0.55,
+      "bleed_contrast": 1.3,
+      "grain_sigma": 4.5,
+      "fade_strength": 0.985,
+      "region_blur": 0.32,
+      "stroke_supersample": 4,
+      "stroke_dx": 1.4,
+      "stroke_dy": 1.4,
+      "stroke_rot": 1.3,
+      "stroke_growth": 0.12,
+      "stroke_pressure": 0.26,
+      "stroke_dry": 0.16,
+      "chaos": 1.15
+    },
+    "check": {
+      "size": 28,
+      "ink_depth": 0.07,
+      "bleed_sigma": 0.46,
+      "bleed_contrast": 1.28,
+      "grain_sigma": 4.0,
+      "fade_strength": 0.985,
+      "chaos": 1.1
+    }
+  },
+  "defaults": {
+    "notice_text": "已知晓自动停电规则，一欠费就停电"
+  },
+  "stamp": {
+    "_readme": "合同编号（红色印章式）配置。使用 assets/code_digits/0..9.png 红笔手写数字位图作为素材，按指定位置贴图。前 prefix 位固定不变，后 length 位每户随机。值可通过 data['contract_code'] 显式传入，否则按 prefix+length 位随机生成。关闭本功能只需把 enabled 置为 false。模板应使用 assets/template_new.jpg（已 PS 擦除原红色编码）。",
+    "enabled": true,
+    "x": 838,
+    "y": 86,
+    "prefix": "25",
+    "length": 5,
+    "digits_dir": "assets/code_digits",
+    "char_advance": 18,
+    "target_height": 26,
+    "chaos": 1.0
+  },
+  "fields": [
+    {
+      "key": "customer_name",
+      "label": "用电人",
+      "type": "text",
+      "x": 264.2,
+      "y": 229.5,
+      "w": 340,
+      "style": "body",
+      "align": "lm",
+      "required": true
+    },
+    {
+      "key": "address",
+      "label": "用电地址",
+      "type": "text",
+      "x": 242.0,
+      "y": 334.0,
+      "w": 640,
+      "style": "body",
+      "align": "lm",
+      "required": true
+    },
+    {
+      "key": "usage_nature",
+      "label": "用电性质",
+      "type": "checkbox_group",
+      "options": [
+        {
+          "value": "居民生活",
+          "x": 232.0,
+          "y": 348.0,
+          "size": 26
+        },
+        {
+          "value": "一般工商业",
+          "x": 363.0,
+          "y": 346.0,
+          "size": 26
+        }
+      ],
+      "style": "check"
+    },
+    {
+      "key": "capacity",
+      "label": "用电容量",
+      "type": "select",
+      "x": 247.0,
+      "y": 385.0,
+      "w": 140,
+      "style": "body",
+      "align": "lm",
+      "options": [
+        "12",
+        "39",
+        "66",
+        "99"
+      ],
+      "suffix": ""
+    },
+    {
+      "key": "voltage",
+      "label": "电压等级",
+      "type": "select",
+      "x": 451.0,
+      "y": 411.0,
+      "w": 140,
+      "style": "body",
+      "align": "lm",
+      "options": [
+        "220",
+        "380"
+      ],
+      "linked_checks": {
+        "220": {
+          "x": 556.0,
+          "y": 410.0,
+          "size": 26
+        },
+        "380": {
+          "x": 602.0,
+          "y": 409.0,
+          "size": 26
+        }
+      }
+    },
+    {
+      "key": "customer_no",
+      "label": "客户编号",
+      "type": "text",
+      "x": 239.0,
+      "y": 461.0,
+      "w": 340,
+      "style": "small",
+      "align": "lm"
+    },
+    {
+      "key": "limit_plan",
+      "label": "限额方案",
+      "type": "select",
+      "options": [
+        "1",
+        "2"
+      ],
+      "x": 1503.4,
+      "y": 486.2,
+      "w": 60,
+      "style": "small",
+      "align": "lm",
+      "_note": "在'选择第 __ 种'空白处直接手写填入数字 1 或 2"
+    },
+    {
+      "key": "phone",
+      "label": "手机号码",
+      "type": "text",
+      "x": 1360.0,
+      "y": 613.0,
+      "w": 300,
+      "style": "small",
+      "align": "lm",
+      "required": true
+    },
+    {
+      "key": "notice_text",
+      "label": "已知晓声明",
+      "type": "text",
+      "x": 1420.3,
+      "y": 1035.7,
+      "w": 560,
+      "style": "small",
+      "align": "lm",
+      "default": "已知晓自动停电规则，一欠费就停电"
+    },
+    {
+      "key": "signature",
+      "label": "用电人签名",
+      "type": "signature",
+      "x": 1552.1,
+      "y": 1071.4,
+      "w": 300,
+      "style": "signature",
+      "align": "lm"
+    },
+    {
+      "key": "id_card",
+      "label": "身份证号码",
+      "type": "text",
+      "x": 1542.8,
+      "y": 1122.6,
+      "w": 360,
+      "style": "small",
+      "align": "lm"
+    },
+    {
+      "key": "sign_date",
+      "label": "用电人签订日期",
+      "type": "text",
+      "x": 1550.5,
+      "y": 1232.7,
+      "w": 300,
+      "style": "small",
+      "align": "lm"
+    },
+    {
+      "key": "sign_date_supplier",
+      "label": "供电人签订日期",
+      "type": "text",
+      "x": 1126.6,
+      "y": 1265.9,
+      "w": 300,
+      "style": "small",
+      "align": "lm",
+      "value_from": "sign_date"
+    }
+  ]
+}

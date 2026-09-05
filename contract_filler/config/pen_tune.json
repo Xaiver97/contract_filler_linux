@@ -1,0 +1,11 @@
+{
+  "size_scale": 1.0,
+  "chaos_scale": 1.0,
+  "ink_depth": 0.07,
+  "fade_strength": 0.985,
+  "grain_sigma": 4.0,
+  "bleed_sigma": 0.45,
+  "char_spacing": 0.02,
+  "digit_spacing": -0.18,
+  "_readme": "笔迹微调存档（程序自动维护）。对应「笔迹微调」面板滑块值，启动时自动加载。如需恢复出厂，可在界面点「恢复默认」或删除本文件。"
+}
