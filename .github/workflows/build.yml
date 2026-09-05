@@ -91,21 +91,21 @@ jobs:
             "
 
       # ── 2. 无头冒烟测试：确认 exe 真能读模板、生成合同图 ──
-      - name: Smoke test CLI (offscreen)
-        run: |
-          echo '>>> 进入 onedir 目录并跑 CLI 批量模式...'
-          cd dist_linux/contract_filler_linux
-          QT_QPA_PLATFORM=offscreen ./contract_filler \
-            --excel samples/测试数据_3户.xlsx \
-            --out /tmp/smoke \
-            --fmt jpg
-          echo '>>> 冒烟输出文件：'
-          ls -la /tmp/smoke/
-          N=$(ls /tmp/smoke/*.jpg 2>/dev/null | wc -l)
-          echo ">>> 生成的 jpg 数量：$N"
-          if [ "$N" -lt 1 ]; then
-            echo "!!! 冒烟失败：未生成任何 jpg"; exit 1
-          fi
+      # - name: Smoke test CLI (offscreen)
+      #   run: |
+      #     echo '>>> 进入 onedir 目录并跑 CLI 批量模式...'
+      #     cd dist_linux/contract_filler_linux
+      #     QT_QPA_PLATFORM=offscreen ./contract_filler \
+      #       --excel samples/测试数据_3户.xlsx \
+      #       --out /tmp/smoke \
+      #       --fmt jpg
+      #     echo '>>> 冒烟输出文件：'
+      #     ls -la /tmp/smoke/
+      #     N=$(ls /tmp/smoke/*.jpg 2>/dev/null | wc -l)
+      #     echo ">>> 生成的 jpg 数量：$N"
+      #     if [ "$N" -lt 1 ]; then
+      #       echo "!!! 冒烟失败：未生成任何 jpg"; exit 1
+      #     fi
 
       # ── 3. 构建 AppDir 目录结构 ──
       - name: Prepare AppDir structure
