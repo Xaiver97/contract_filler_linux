@@ -1,0 +1,169 @@
+# ============================================================ #
+# 供用电合同手写填充工具 · GitHub Actions 打包 workflow
+# ------------------------------------------------------------
+# 目标平台：银河麒麟 V11（底层 = Debian 11 Bullseye）
+# 构建方式：GitHub ubuntu-latest runner 内启动 debian:bullseye
+#           Docker 容器 → PyInstaller 用 spec 打 onedir →
+#           无头冒烟测试 → AppImage 打包 → 上传产物
+#
+# 产物：
+#   contract_filler-x86_64.AppImage          （单文件免安装，双击即用）
+#   contract_filler_linux_x86_64.tar.gz      （免安装 onedir 目录，解压即用）
+# ============================================================ #
+
+name: Build ContractFiller Linux
+
+# 触发条件：push 到 main/master，或手动触发
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:      # 允许在 GitHub 页面手动点「Run workflow」
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 0. 拉取代码 ──
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # ── 1. 在 Debian 11 容器内用 PyInstaller 打包 ──
+      #    麒麟 V11 底层就是 Debian 11，架构/glibc 一致，此产物可直接在麒麟上运行。
+      - name: Build executable inside Debian 11 container
+        run: |
+          docker run --rm \
+            -e CF_ROOT=/app \
+            -v "${{ github.workspace }}":/app \
+            -w /app \
+            debian:bullseye bash -c "
+              set -e
+
+              echo '>>> 安装系统依赖...'
+              apt-get update -q
+              # Python3 与虚拟环境
+              apt-get install -y python3 python3-pip python3-venv
+              # PyQt5 需要的系统级 Qt/X11 运行库（无头容器里也要收集齐）
+              apt-get install -y \
+                libxcb1 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+                libxcb-randr0 libxcb-render-util0 libxcb-shape0 \
+                libxcb-xinerama0 libxcb-xkb1 libxcb-xfixes0 \
+                libxkbcommon0 libxkbcommon-x11-0 libgl1 libegl1 \
+                libdbus-1-3 libfontconfig1 fontconfig \
+                libxrender1 libxext6 libx11-6 libxi6 libsm6 libice6
+
+              echo '>>> 建立虚拟环境...'
+              python3 -m venv /opt/venv
+              source /opt/venv/bin/activate
+              pip install --upgrade pip
+
+              echo '>>> 安装 Python 依赖（含 PyQt5）...'
+              # 国内加速可去掉注释下一行，或追加 -i 清华镜像
+              # pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+              pip install pyinstaller pillow numpy openpyxl python-docx pyqt5
+
+              echo '>>> PyInstaller 打包（多模块 spec）...'
+              pyinstaller packaging/contract_tool_linux.spec --noconfirm \
+                --distpath /app/dist_linux \
+                --workpath /tmp/pybuild
+
+              echo '>>> 打包完成，产物列表：'
+              ls -la /app/dist_linux/
+            "
+
+      # ── 2. 无头冒烟测试：确认 exe 真能读模板、生成合同图 ──
+      - name: Smoke test CLI (offscreen)
+        run: |
+          echo '>>> 进入 onedir 目录并跑 CLI 批量模式...'
+          cd dist_linux/contract_filler_linux
+          QT_QPA_PLATFORM=offscreen ./contract_filler \
+            --excel samples/测试数据_3户.xlsx \
+            --out /tmp/smoke \
+            --fmt jpg
+          echo '>>> 冒烟输出文件：'
+          ls -la /tmp/smoke/
+          N=$(ls /tmp/smoke/*.jpg 2>/dev/null | wc -l)
+          echo ">>> 生成的 jpg 数量：$N"
+          if [ "$N" -lt 1 ]; then
+            echo "!!! 冒烟失败：未生成任何 jpg"; exit 1
+          fi
+
+      # ── 3. 构建 AppDir 目录结构 ──
+      - name: Prepare AppDir structure
+        run: |
+          set -e
+          echo '>>> 组装 AppDir...'
+          mkdir -p AppDir/usr/lib/contract_filler
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+
+          # 整个 onedir（含 assets/fonts/config/samples 旁侧资源）拷进 AppDir/usr/lib
+          cp -r dist_linux/contract_filler_linux/. AppDir/usr/lib/contract_filler/
+
+          # 入口软链到 PATH
+          ln -sf usr/lib/contract_filler/contract_filler AppDir/usr/bin/contract_filler
+
+          # .desktop 快捷方式
+          cat > AppDir/usr/share/applications/contract_filler.desktop << 'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=contract_filler
+          Comment=供用电合同手写填充工具
+          Exec=contract_filler
+          Icon=contract_filler
+          Terminal=false
+          Categories=Office;Utility;
+          EOF
+          ln -sf usr/share/applications/contract_filler.desktop AppDir/contract_filler.desktop
+
+          # 图标（临时纯色图，可换项目 logo）
+          apt-get install -y imagemagick > /dev/null 2>&1
+          convert -size 256x256 xc:#2980b9 -gravity center \
+            -annotate 0 "合同\n填充" \
+            AppDir/usr/share/icons/hicolor/256x256/apps/contract_filler.png
+          ln -sf usr/share/icons/hicolor/256x256/apps/contract_filler.png AppDir/contract_filler.png
+
+          # AppRun 入口脚本
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          export PATH="$HERE/usr/bin:$PATH"
+          # 桌面麒麟自动用 xcb；如需强制可取消注释下一行
+          # export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-xcb}
+          exec "$HERE/usr/bin/contract_filler" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+
+      # ── 4. 下载 appimagetool 并打成 AppImage ──
+      - name: Build AppImage
+        run: |
+          echo '>>> 下载 appimagetool...'
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          # 无 FUSE 环境，先提取再运行
+          ./appimagetool-x86_64.AppImage --appimage-extract
+          echo '>>> 生成 AppImage...'
+          ./squashfs-root/AppRun AppDir contract_filler-x86_64.AppImage
+          chmod +x contract_filler-x86_64.AppImage
+          ls -la contract_filler-x86_64.AppImage
+
+      # ── 5. 打 onedir 免安装 tar.gz ──
+      - name: Package onedir tarball
+        run: |
+          tar -czf contract_filler_linux_x86_64.tar.gz dist_linux/contract_filler_linux
+          ls -la contract_filler_linux_x86_64.tar.gz
+
+      # ── 6. 上传 AppImage 产物 ──
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract_filler-AppImage-x86_64
+          path: contract_filler-x86_64.AppImage
+
+      # ── 7. 上传 onedir tar.gz 产物 ──
+      - name: Upload onedir tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract_filler-onedir-x86_64
+          path: contract_filler_linux_x86_64.tar.gz
